@@ -13,7 +13,6 @@ export default function PluginPanel() {
     setOutput('Ausführung gestartet...');
     
     try {
-      // Simulate code execution
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (language === 'javascript') {
