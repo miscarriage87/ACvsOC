@@ -35,6 +35,24 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// API: Get available models for a provider
+app.get('/api/models/:provider', async (req, res) => {
+  const provider = req.params.provider;
+  try {
+    if (provider === 'anthropic') {
+      const models = await ClaudeService.fetchAvailableModels(process.env.ANTHROPIC_API_KEY);
+      res.json({ models });
+    } else if (provider === 'openai') {
+      const models = await ChatGPTService.fetchAvailableModels(process.env.OPENAI_API_KEY);
+      res.json({ models });
+    } else {
+      res.status(400).json({ error: 'Unknown provider' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // AI service instances
 const claudeService = new ClaudeService(process.env.ANTHROPIC_API_KEY);
 const chatGPTService = new ChatGPTService(process.env.OPENAI_API_KEY);
@@ -44,7 +62,13 @@ io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
   let session = null;
 
-  socket.on('start_task', async (taskDescription) => {
+  socket.on('start_task', async (data) => {
+    // data: { taskDescription, claudeModel, openaiModel }
+    const { taskDescription, claudeModel, openaiModel } = typeof data === 'object' ? data : {};
+    if (!taskDescription || !claudeModel || !openaiModel) {
+      socket.emit('error_message', 'Task, Claude model, and OpenAI model are required.');
+      return;
+    }
     if (session && session.active) {
       socket.emit('error_message', 'A session is already running. Please stop it first.');
       return;
@@ -55,6 +79,8 @@ io.on('connection', (socket) => {
         chatGPTService,
         socket,
         task: taskDescription,
+        claudeModel,
+        openaiModel,
         maxIterations: 8,
         timeLimit: 180
       });

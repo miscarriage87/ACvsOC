@@ -10,14 +10,18 @@ class AICollaborationSession {
    * @param {ChatGPTService} options.chatGPTService
    * @param {object} options.socket
    * @param {string} options.task
+   * @param {string} options.claudeModel
+   * @param {string} options.openaiModel
    * @param {number} [options.maxIterations=8]
    * @param {number} [options.timeLimit=180]
    */
-  constructor({ claudeService, chatGPTService, socket, task, maxIterations = 8, timeLimit = 180 }) {
+  constructor({ claudeService, chatGPTService, socket, task, claudeModel, openaiModel, maxIterations = 8, timeLimit = 180 }) {
     this.claudeService = claudeService;
     this.chatGPTService = chatGPTService;
     this.socket = socket;
     this.task = task;
+    this.claudeModel = claudeModel;
+    this.openaiModel = openaiModel;
     this.maxIterations = maxIterations;
     this.timeLimit = timeLimit; // seconds
     this.iteration = 0;
@@ -25,6 +29,7 @@ class AICollaborationSession {
     this.active = false;
     this.status = 'WORKING';
     this.startTime = null;
+    this.totalTokens = 0;
   }
 
   /**
@@ -46,34 +51,58 @@ class AICollaborationSession {
   async loop() {
     while (this.active && this.shouldContinue()) {
       this.iteration++;
+      const timeLeft = Math.max(0, this.timeLimit - Math.floor((Date.now() - this.startTime) / 1000));
+      this.socket.emit('chat_message', { sender: 'system', message: `Iteration: ${this.iteration} / ${this.maxIterations} | Time left: ${timeLeft}s | Status: ${this.status}` });
+      this.socket.emit('chat_message', { sender: 'system', message: `Tokens used so far: ${this.totalTokens}` });
+      console.log(`[Session] Iteration ${this.iteration} started. Time left: ${timeLeft}s, Status: ${this.status}`);
       // Claude as programmer
-      let claudeReply;
+      let claudeReply, claudeTokens = 0;
+      let claudeStart = Date.now();
       try {
-        claudeReply = await this.sendToClaude();
-        this.socket.emit('chat_message', { sender: 'ai', message: claudeReply });
+        const result = await this.claudeService.sendMessage({ message: this.task, history: this.history, model: this.claudeModel });
+        claudeReply = result.content;
+        claudeTokens = result.tokens || 0;
+        this.totalTokens += claudeTokens;
+        if (typeof claudeReply !== 'string') claudeReply = JSON.stringify(claudeReply);
+        const elapsed = Math.floor((Date.now() - claudeStart) / 1000);
+        this.socket.emit('chat_message', { sender: 'ai-claude', message: `[Claude] (${elapsed}s):\n${claudeReply}`, tokens: claudeTokens });
+        console.log(`[Session] Claude finished in ${elapsed}s. Tokens: ${claudeTokens}`);
       } catch (err) {
         this.socket.emit('error_message', `Claude error: ${err.message}`);
+        console.log(`[Session] Claude error: ${err.message}`);
         break;
       }
       this.history.push({ role: 'assistant', content: claudeReply });
       // Check for status in Claude's reply
-      const statusMatch = claudeReply.match(/STATUS:\s*\[(WORKING|COMPLETE|NEED_FEEDBACK)\]/i);
+      let statusMatch = null;
+      if (typeof claudeReply === 'string') {
+        statusMatch = claudeReply.match(/STATUS:\s*\[(WORKING|COMPLETE|NEED_FEEDBACK)\]/i);
+      }
       this.status = statusMatch ? statusMatch[1].toUpperCase() : 'WORKING';
       if (this.status === 'COMPLETE') break;
       // ChatGPT as supervisor
-      let chatGptReply;
+      let chatGptReply, gptTokens = 0;
+      let gptStart = Date.now();
       try {
-        chatGptReply = await this.sendToChatGPT();
-        this.socket.emit('chat_message', { sender: 'ai', message: chatGptReply });
+        const result = await this.chatGPTService.sendMessage({ message: claudeReply, history: this.history, model: this.openaiModel });
+        chatGptReply = result.content;
+        gptTokens = result.tokens || 0;
+        this.totalTokens += gptTokens;
+        if (typeof chatGptReply !== 'string') chatGptReply = JSON.stringify(chatGptReply);
+        const elapsed = Math.floor((Date.now() - gptStart) / 1000);
+        this.socket.emit('chat_message', { sender: 'ai-gpt', message: `[ChatGPT] (${elapsed}s):\n${chatGptReply}`, tokens: gptTokens });
+        console.log(`[Session] ChatGPT finished in ${elapsed}s. Tokens: ${gptTokens}`);
       } catch (err) {
         this.socket.emit('error_message', `ChatGPT error: ${err.message}`);
+        console.log(`[Session] ChatGPT error: ${err.message}`);
         break;
       }
       this.history.push({ role: 'user', content: chatGptReply });
-      // Optionally, check for stop condition in feedback
     }
     this.active = false;
-    this.socket.emit('chat_message', { sender: 'system', message: 'Collaboration session ended.' });
+    this.socket.emit('chat_message', { sender: 'system', message: `Collaboration session ended. Iterations: ${this.iteration}, Status: ${this.status}` });
+    this.socket.emit('chat_message', { sender: 'system', message: `Total tokens used: ${this.totalTokens}` });
+    console.log(`[Session] Collaboration session ended. Iterations: ${this.iteration}, Status: ${this.status}, Total tokens: ${this.totalTokens}`);
   }
 
   /**

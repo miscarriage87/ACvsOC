@@ -8,17 +8,32 @@
 </head>
 <body>
   <div class="container">
-    <h1>AI Collaboration Platform</h1>
+    <h1><span class="logo-gradient">🤖</span> AI Collaboration Platform</h1>
+    <div style="height:2px; background:linear-gradient(90deg,#6366f1 0%,#f43f5e 100%); border-radius:2px; margin-bottom:22px; opacity:0.12;"></div>
     <form id="task-form">
+      <div class="model-selectors">
+        <div class="model-group">
+          <label>Claude (Anthropic):</label>
+          <select id="claude-model-select" required></select>
+        </div>
+        <div class="model-group">
+          <label>ChatGPT (OpenAI):</label>
+          <select id="openai-model-select" required></select>
+        </div>
+      </div>
       <input type="text" id="task-input" placeholder="Describe your programming task..." required />
       <button type="submit" id="start-btn">Start</button>
       <button type="button" id="stop-btn" disabled>Stop</button>
     </form>
     <div id="chat-area">
       <ul id="chat-messages"></ul>
+      <div id="loading-indicator" style="display:none;"></div>
     </div>
+    <div id="status-bar" style="margin-top:8px; text-align:center; color:#64748b; font-size:0.98rem;"></div>
+    <div id="token-counter" style="margin-top:4px; text-align:center; color:#a3a3a3; font-size:0.95rem;"></div>
   </div>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="main.js"></script>
 </body>
 </html> 
