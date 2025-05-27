@@ -1,0 +1,9 @@
+# AI Collaboration Platform Rules
+
+- Use modern JavaScript (ES6+)
+- Prefer async/await over promises
+- Add comprehensive error handling
+- Use meaningful variable names
+- Add JSDoc comments for functions
+- Follow Node.js best practices
+- Use environment variables for secrets 
