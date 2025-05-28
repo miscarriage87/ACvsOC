@@ -63,8 +63,8 @@ io.on('connection', (socket) => {
   let session = null;
 
   socket.on('start_task', async (data) => {
-    // data: { taskDescription, claudeModel, openaiModel }
-    const { taskDescription, claudeModel, openaiModel } = typeof data === 'object' ? data : {};
+    // data: { taskDescription, claudeModel, openaiModel, autoRun }
+    const { taskDescription, claudeModel, openaiModel, autoRun } = typeof data === 'object' ? data : {};
     if (!taskDescription || !claudeModel || !openaiModel) {
       socket.emit('error_message', 'Task, Claude model, and OpenAI model are required.');
       return;
@@ -82,11 +82,18 @@ io.on('connection', (socket) => {
         claudeModel,
         openaiModel,
         maxIterations: 8,
-        timeLimit: 180
+        timeLimit: 180,
+        autoRun: autoRun !== false // default true
       });
       await session.start();
     } catch (err) {
       socket.emit('error_message', `Session error: ${err.message}`);
+    }
+  });
+
+  socket.on('continue_round', () => {
+    if (session && typeof session.continueRound === 'function') {
+      session.continueRound();
     }
   });
 

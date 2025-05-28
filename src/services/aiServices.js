@@ -1,7 +1,5 @@
+const { CLAUDE_INIT_PROMPT, GPT_INIT_PROMPT } = require('./aiInitPrompts');
 const axios = require('axios');
-
-const CLAUDE_INIT_PROMPT = 'Du bist Claude, ein KI-Modell von Anthropic. Du kannst, falls sinnvoll, in Markdown antworten.';
-const GPT_INIT_PROMPT = 'Du bist ChatGPT, ein KI-Modell von OpenAI. Du kannst, falls sinnvoll, in Markdown antworten.';
 
 /**
  * Service for interacting with Anthropic Claude API
@@ -100,6 +98,7 @@ class ClaudeService {
       'claude-3-sonnet-20240229',
       'claude-3-haiku-20240307',
       'claude-3-5-sonnet-20241022',
+      'claude-sonnet-4-20250514',
     ];
   }
 }

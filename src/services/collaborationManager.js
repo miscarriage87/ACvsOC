@@ -14,8 +14,9 @@ class AICollaborationSession {
    * @param {string} options.openaiModel
    * @param {number} [options.maxIterations=8]
    * @param {number} [options.timeLimit=180]
+   * @param {boolean} [options.autoRun=true]
    */
-  constructor({ claudeService, chatGPTService, socket, task, claudeModel, openaiModel, maxIterations = 8, timeLimit = 180 }) {
+  constructor({ claudeService, chatGPTService, socket, task, claudeModel, openaiModel, maxIterations = 8, timeLimit = 180, autoRun = true }) {
     this.claudeService = claudeService;
     this.chatGPTService = chatGPTService;
     this.socket = socket;
@@ -30,6 +31,8 @@ class AICollaborationSession {
     this.status = 'WORKING';
     this.startTime = null;
     this.totalTokens = 0;
+    this.autoRun = autoRun;
+    this._continueResolver = null;
   }
 
   /**
@@ -98,6 +101,14 @@ class AICollaborationSession {
         break;
       }
       this.history.push({ role: 'user', content: chatGptReply });
+      // Wenn autoRun false, dann warte auf continueRound
+      if (!this.autoRun && this.active && this.shouldContinue()) {
+        await new Promise(resolve => {
+          this._continueResolver = resolve;
+          this.socket.emit('chat_message', { sender: 'system', message: 'WAIT_FOR_CONTINUE' });
+        });
+        this._continueResolver = null;
+      }
     }
     this.active = false;
     this.socket.emit('chat_message', { sender: 'system', message: `Collaboration session ended. Iterations: ${this.iteration}, Status: ${this.status}` });
@@ -136,6 +147,15 @@ class AICollaborationSession {
    */
   stop() {
     this.active = false;
+  }
+
+  /**
+   * Ermöglicht das Fortsetzen der Runde bei autoRun=OFF
+   */
+  continueRound() {
+    if (this._continueResolver) {
+      this._continueResolver();
+    }
   }
 }
 
