@@ -1,18 +1,37 @@
 {
   "name": "ai-collaboration-platform",
   "version": "1.0.0",
-  "description": "A platform where two AIs (Claude and ChatGPT) collaborate on programming tasks.",
+  "description": "A web-based platform where two AIs (Claude by Anthropic and ChatGPT by OpenAI) autonomously collaborate on programming tasks.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:frontend\"",
+    "build": "cd frontend && npm run build",
+    "build:all": "npm run install:all && npm run build",
+    "install:backend": "npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "lint": "eslint .",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:all": "npm run lint && npm run lint:frontend",
+    "clean": "rimraf frontend/dist node_modules frontend/node_modules",
+    "setup": "npm run install:all",
+    "start:prod": "NODE_ENV=production node server.js",
+    "start:dev": "node start.js"
   },
   "keywords": [
     "AI",
     "collaboration",
     "platform",
     "Claude",
-    "ChatGPT"
+    "ChatGPT",
+    "Anthropic",
+    "OpenAI",
+    "socket.io",
+    "React",
+    "real-time"
   ],
   "author": "",
   "license": "MIT",
@@ -26,6 +45,20 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
-  }
+    "concurrently": "^8.2.2",
+    "eslint": "^8.56.0",
+    "nodemon": "^3.1.0",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/miscarriage87/ACvsOC"
+  },
+  "bugs": {
+    "url": "https://github.com/miscarriage87/ACvsOC/issues"
+  },
+  "homepage": "https://github.com/miscarriage87/ACvsOC#readme"
 }

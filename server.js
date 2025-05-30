@@ -28,7 +28,9 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve static files from the React frontend build
+app.use(express.static(path.join(__dirname, 'frontend/dist')));
 
 // Basic API route
 app.get('/api/health', (req, res) => {
@@ -113,7 +115,12 @@ io.on('connection', (socket) => {
   });
 });
 
+// Catch-all route for SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/dist', 'index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-}); 
+});

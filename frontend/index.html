@@ -1,13 +1,178 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    
+    <!-- Primary Meta Tags -->
+    <title>AI Collaboration Platform | Claude vs ChatGPT</title>
+    <meta name="title" content="AI Collaboration Platform | Claude vs ChatGPT" />
+    <meta name="description" content="A web-based platform where Claude (Anthropic) and ChatGPT (OpenAI) autonomously collaborate on programming tasks in real-time." />
+    <meta name="keywords" content="AI, artificial intelligence, Claude, ChatGPT, collaboration, programming, Anthropic, OpenAI, AI programming, code review" />
+    <meta name="author" content="AI Collaboration Platform" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="msapplication-TileColor" content="#6366f1" />
+    <meta name="msapplication-navbutton-color" content="#6366f1" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="#6366f1" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ai-collaboration-platform.com/" />
+    <meta property="og:title" content="AI Collaboration Platform | Claude vs ChatGPT" />
+    <meta property="og:description" content="A web-based platform where Claude (Anthropic) and ChatGPT (OpenAI) autonomously collaborate on programming tasks in real-time." />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://ai-collaboration-platform.com/" />
+    <meta property="twitter:title" content="AI Collaboration Platform | Claude vs ChatGPT" />
+    <meta property="twitter:description" content="A web-based platform where Claude (Anthropic) and ChatGPT (OpenAI) autonomously collaborate on programming tasks in real-time." />
+    <meta property="twitter:image" content="/og-image.png" />
+    
+    <!-- Preload Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    
+    <!-- Preload Critical Assets -->
+    <link rel="preload" href="/src/global.css" as="style" />
+    <link rel="modulepreload" href="/src/main.jsx" />
+    
+    <!-- App Loading Styles -->
+    <style>
+      .app-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        z-index: 9999;
+        transition: opacity 0.3s, visibility 0.3s;
+      }
+      
+      .app-loading.dark {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #f8fafc;
+      }
+      
+      .app-loading-spinner {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #6366f1, #f43f5e);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        position: relative;
+        animation: pulse 1.5s infinite ease-in-out;
+      }
+      
+      .app-loading-spinner::before {
+        content: "";
+        position: absolute;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      }
+      
+      .app-loading.dark .app-loading-spinner::before {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      }
+      
+      .app-loading-spinner::after {
+        content: "";
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #6366f1;
+        border-bottom-color: #f43f5e;
+        animation: spin 1s linear infinite;
+      }
+      
+      .app-loading-text {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-weight: 600;
+        font-size: 18px;
+        color: #1e293b;
+        margin-bottom: 8px;
+      }
+      
+      .app-loading.dark .app-loading-text {
+        color: #f8fafc;
+      }
+      
+      .app-loading-subtext {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-weight: 400;
+        font-size: 14px;
+        color: #64748b;
+      }
+      
+      .app-loading.dark .app-loading-subtext {
+        color: #94a3b8;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .app-loaded .app-loading {
+        opacity: 0;
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
+    <!-- App Loading State -->
+    <div class="app-loading">
+      <div class="app-loading-spinner"></div>
+      <div class="app-loading-text">AI Collaboration Platform</div>
+      <div class="app-loading-subtext">Loading application...</div>
+    </div>
+    
+    <!-- React App Root -->
     <div id="root"></div>
+    
+    <!-- App Initialization -->
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Check for dark mode preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector('.app-loading').classList.add('dark');
+      }
+      
+      // Remove loading screen when app is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          document.body.classList.add('app-loaded');
+        }, 500);
+      });
+    </script>
   </body>
 </html>
